@@ -1,30 +1,54 @@
 #!/bin/bash
 
-##################################################
+###################################################
 # Author: MrDerpus
-# v0.0.3
+# v0.0.4
 # archlinux-2025.07.1-x86_64
+# Arch Linux 6.15.4
 #
-# Experimental ONLY!
-# This should not be used to install Arch Linux
-# outside of a virtual machine.
-# 
+# Experimental!
+# This has only been tested by installing
+# Arch Linux on a Virtual Machine.
+#
 # https://www.youtube.com/watch?v=68z11VAYMS8
 # This script was written following this tutorial,
 # but I have also made it easier for automation.
 #
 # This is for UEFI systems only.
 #
-# MAKE SURE YOU HAVE ETHERNET PLUGGED IN TO YOUR
-# COMPUTER! This is required to install essential
+# This is not a set and forget, you many have to
+# say yes or no to something in the terminal.
+# It is recommended that you stay put to attend
+# to the needy computer while it performs pure
+# sorcery right before your very eyes.
+#
+# Make sure you have ethernet plugged into your PC!
+# This is required to install essential
 # and user defined packages.
 #
 # Make sure you have backed up all your files
-# you, yourself have deemed worth keeping.
+# you, yourself have deemed worthy of saving, as
+# this script WILL completely overwrite & erase your:
+# Drive partitions, family photos & your paintings
+# you made in mspaint.
+#
+# Unlike me, this script does not discriminate.
+# The script does not care what type of files you
+# have or how precious they are to you, it WILL
+# obliterate them in front of you.
 #
 # Make sure you understand what this script does.
 # Make sure you know what you are doing.
-##################################################
+#
+# I recommend unplugging all other drives that
+# you don't intend to erase or install Arch Linux
+# onto, as this script was only tested with one
+# drive in mind.
+#
+# This script only installs to bare minimum utils
+# required run and to use Arch Linux, as well as
+# fastfetch.  R.I.P neofetch.
+###################################################
 
 #username@hostname
 username="" # The users name.
@@ -36,9 +60,9 @@ region=""   # Australia
 city=""     # Sydney
 keyboard="" # US by default
 
-# As root type this into the terminal to get your desired locale:
-# nano -l /etc/local.gen
-#line 146: en_AU.UTF-8, line 154: en_GB.UTF-8, line: 171 en_US.UTF-8
+# As root type this into the terminal to find your desired locale:
+# run: nano -l /etc/local.gen
+# en_AU.UTF-8, en_GB.UTF-8, en_US.UTF-8
 locale_gen_line="" # [ en_AU.UTF-8 ] 
 
 ### Packages to pacstrap ###
@@ -51,12 +75,14 @@ pacstrap_pacs=(
 	grub
 	efibootmgr
 	nano
+	vi
 	networkmanager
+	fastfetch
 	amd-ucode    # swap between CPU arch depending on system.
 	#intel-ucode #
 	)
 
-### Desktop packages ###
+### Desktop packages ### To be added later . .. 
 #gui_pacs=(
 #	hyprland
 #	hyprpaper
@@ -81,7 +107,6 @@ YEL="${BOLD}\e[33m"
 GRN="${BOLD}\e[32m"
 BLU="${BOLD}\e[36m" # cyan actually, blue is \e[34m
 WHT="${BOLD}\e[37m"
-
 
 _echo()
 {
@@ -164,7 +189,18 @@ if [ $? -eq 0 ]; then
 	_echo "${YEL}* Safely unmounting drives . . ."
 	umount -R /mnt
 
-	_echo "${GRN} SUCCESSFULLY RAN ALL COMMANDS!\n ${WHT} You may now:${YEL} 'sudo reboot now'\n Exiting script . . ."
+	_echo "${GRN} SUCCESSFULLY RAN ALL COMMANDS!\n ${WHT} You may now:${YEL} 'sudo reboot now'\n"
+	_echo "${YEL} Did you want to display your root password & your user password incase you've already forgotten?"
+	_echo "${WHT} Yes/no "
+	read value
+
+	if [[ "${value}" == "Yes" ]]; then
+		_echo "${WHT} Username:${BLU} ${username}"
+		_echo "${WHT} Hostname:${BLU} ${hostname}"
+		_echo "${WHT} Password:${BLU} ${password}"
+		_echo "${WHT} Root password:${RED} ${root_password}"
+	fi
+
 	exit
 
 else
