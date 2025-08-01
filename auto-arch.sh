@@ -2,7 +2,7 @@
 
 ##################################################
 # Author: MrDerpus
-# v0.0.2
+# v0.0.3
 # archlinux-2025.07.1-x86_64
 #
 # Experimental ONLY!
@@ -110,9 +110,10 @@ if [ $? -eq 0 ]; then
 	# yes internet, run script.
 	_echo "${GRN} Internet established!"
 	
-	if [[ "${keyboard}" != ""]]; then
+	if [[ "${keyboard}" != "" ]]; then
 		_echo "${YEL}* Setting keyboard layout to '${keyboard}' . . ."
 		loadkeys "${keyboard}"
+	fi
 
 	target="/dev/sda"
 	_echo "${YEL}* Zapping and creating partitions: ${WHT}'${target}1', '${target}2' & '${target}3' . . ."
@@ -130,8 +131,8 @@ if [ $? -eq 0 ]; then
 
 	_echo "${YEL}* Mounting drives . . ."
 	efi_boot="/boot/efi"
+	mount     /dev/sda3 /mnt
 	mkdir -p "/mnt${efi_boot}"
-	mount  /dev/sda3  /mnt
 	mount  /dev/sda1 "/mnt${efi_boot}"
 	swapon /dev/sda2
 
@@ -161,7 +162,7 @@ if [ $? -eq 0 ]; then
 	"
 
 	_echo "${YEL}* Safely unmounting drives . . ."
-	umount -a
+	umount -R /mnt
 
 	_echo "${GRN} SUCCESSFULLY RAN ALL COMMANDS!\n ${WHT} You may now:${YEL} 'sudo reboot now'\n Exiting script . . ."
 	exit
