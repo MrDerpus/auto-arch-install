@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ##################################################
-# Author:  MrDerpus
-# v0.0.1
+# Author: MrDerpus
+# v0.0.2
 # archlinux-2025.07.1-x86_64
 #
 # Experimental ONLY!
@@ -10,13 +10,14 @@
 # outside of a virtual machine.
 # 
 # https://www.youtube.com/watch?v=68z11VAYMS8
-# This script written following this tutorial,
+# This script was written following this tutorial,
 # but I have also made it easier for automation.
 #
 # This is for UEFI systems only.
 #
 # MAKE SURE YOU HAVE ETHERNET PLUGGED IN TO YOUR
-# COMPUTER!
+# COMPUTER! This is required to install essential
+# and user defined packages.
 #
 # Make sure you have backed up all your files
 # you, yourself have deemed worth keeping.
@@ -35,12 +36,12 @@ region=""   # Australia
 city=""     # Sydney
 keyboard="" # US by default
 
-# As root type this into the terminal:
+# As root type this into the terminal to get your desired locale:
 # nano -l /etc/local.gen
 #line 146: en_AU.UTF-8, line 154: en_GB.UTF-8, line: 171 en_US.UTF-8
 locale_gen_line="" # [ en_AU.UTF-8 ] 
 
-### Packages to pacstrap ##
+### Packages to pacstrap ###
 pacstrap_pacs=(
 	base
 	linux
@@ -55,12 +56,12 @@ pacstrap_pacs=(
 	#intel-ucode #
 	)
 
-### Desktop packages #####
-gui_pacs=(
-	hyprland
-	hyprpaper
-	kitty
-	)
+### Desktop packages ###
+#gui_pacs=(
+#	hyprland
+#	hyprpaper
+#	kitty
+#	)
 
 
 
@@ -96,7 +97,7 @@ _echo()
 if [[ "${read}" != "Yes" ]]; then
 	_echo "\n${RED} Please make sure you read the file contents!"
 	_echo "${WHT} the variable 'read' is case sensitive and\n requires you to write as: 'Yes'. \n"
-	exit 3
+	exit
 fi
 
 
@@ -109,7 +110,9 @@ if [ $? -eq 0 ]; then
 	# yes internet, run script.
 	_echo "${GRN} Internet established!"
 	
-	loadkeys "${keyboard}"
+	if [[ "${keyboard}" != ""]]; then
+		_echo "${YEL}* Setting keyboard layout to '${keyboard}' . . ."
+		loadkeys "${keyboard}"
 
 	target="/dev/sda"
 	_echo "${YEL}* Zapping and creating partitions: ${WHT}'${target}1', '${target}2' & '${target}3' . . ."
@@ -120,9 +123,9 @@ if [ $? -eq 0 ]; then
 
 
 	_echo "${YEL}* Formatting partitions . . ."
-	mkfs.fat -F 32 /dev/sda1
-	mkswap         /dev/sda2
-	mkfs.ext4      /dev/sda3
+	mkfs.fat -F 32 "${target}1"
+	mkswap         "${target}2"
+	mkfs.ext4      "${target}3"
 
 
 	_echo "${YEL}* Mounting drives . . ."
@@ -139,32 +142,32 @@ if [ $? -eq 0 ]; then
 	genfstab /mnt > /mnt/etc/fstab
 
 
-	_echo "${YEL}* Setting: zoneinfo, system clock, username & hostname as ${BLU}arch-root${YEL} . . ."
+	_echo "${YEL}* Setting: zoneinfo, system clock, locale, user & hostname as ${BLU}arch-root${YEL} . . ."
 	arch-chroot /mnt /bin/bash -c "
 		ln -sf /usr/share/zoneinfo/${region}/${city} /etc/localtime &&
 		hwclock --systohc &&
-		sed -i \"/^${locale_gen_line}/s/^#//\" /etc/locale.gen &&
+		sed -i '/^#${locale_gen_line}/s/^#//' /etc/locale.gen &&
 		locale-gen &&
-		echo \"LANG=${local_gen_line}\" > /etc/locale.conf
+		echo 'LANG=${locale_gen_line}' > /etc/locale.conf &&
 		echo '${hostname}' > /etc/hostname &&
-		echo -e '127.0.0.1\tlocalhost\n::1\tlocalhost\n127.0.1.1\t${hostname}.localdomain\t${hostname}' > /etc/hosts &&
+		echo -e '127.0.0.1\\tlocalhost\\n::1\\tlocalhost\\n127.0.1.1\\t${hostname}.localdomain\\t${hostname}' > /etc/hosts &&
 		echo 'root:${root_password}' | chpasswd &&
 		useradd -m -G wheel -s /bin/bash ${username} &&
-		echo '${username}:${password} |chpasswd'
-		sed -i '/^%wheel ALL=(ALL:ALL)/s/^# //' /etc/sudoers &&
+		echo '${username}:${password}' | chpasswd &&
+		sed -i '/^# %wheel ALL=(ALL:ALL) ALL/s/^# //' /etc/sudoers &&
 		systemctl enable NetworkManager &&
-		grub-install ${target}
+		grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB &&
 		grub-mkconfig -o /boot/grub/grub.cfg
-		exit
 	"
 
+	_echo "${YEL}* Safely unmounting drives . . ."
 	umount -a
 
-	_echo "${GRN} SUCCESSFULLY RAN ALL COMMANDS!\n ${WHT} you may now:${YEL} 'sudo reboot now'"
-
+	_echo "${GRN} SUCCESSFULLY RAN ALL COMMANDS!\n ${WHT} You may now:${YEL} 'sudo reboot now'\n Exiting script . . ."
+	exit
 
 else
 	# no internet, exit script.
 	_echo "${RED} You are not connected to the internet.\n You are required to be connected to the internet for this script to: download essential & defined packages."
-	exit 3
+	exit
 fi
